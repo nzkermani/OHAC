@@ -1,4 +1,4 @@
-function bin = nzkPeakMatching(path, file, ppm, binOfLengthOneOK,splitCorrection )
+function bin = nzkPeakMatching(path, file, ppm, binOfLengthOneOK,splitCorrection, repeatPeak )
 %% PPMPeakAlignmentv10par aligns m/z ratios using hierarchical agglomerative clustering
 % and ppm based heuristic rules for peak alignement
 %%
@@ -18,7 +18,7 @@ function bin = nzkPeakMatching(path, file, ppm, binOfLengthOneOK,splitCorrection
 % Development of a heuristic approach for metabolomics. Metabolomics 2, 75–83 (2006).
 %            2. Kermani, N. Z.et al, to be published
 % Add Java package
-javaclasspath('packages/imzMLConverter/imzMLConverter.jar')
+javaclasspath('imzMLConverter/imzMLConverter.jar')
 fullfile = [path file '.imzML'];
 imzML = imzMLConverter.ImzMLHandler.parseimzML(fullfile);
 
@@ -38,7 +38,7 @@ sclFac(isinf(sclFac))   = 1;
 sclFac(isnan(sclFac))   = 1;
 sclFac(sclFac == 0)     = 1;
 sp = bsxfun(@rdivide,sp,sclFac);
-
+dims = size(sp);
 
 %% Build super spectrum (/reference/target)
 % Error window is 2 times ppm
@@ -67,7 +67,7 @@ eppm = sorted_mz_value*Eppm*2;
 flag_indx = find(diff_mz > eppm(1:end-1));
 
 % creats intervals
-clearvars -except TempSp sorted_mz_value  sorted_mz_indx flag_indx ppm binOfLengthOneOK splitCorrection
+clearvars -except dims TempSp sorted_mz_value  sorted_mz_indx flag_indx ppm binOfLengthOneOK splitCorrection
 number_of_intervals = size(flag_indx,1);
 flag_indx = [1; flag_indx];
 %% Initiate intervals
@@ -90,7 +90,7 @@ end
 interval(i+1).ions = sorted_mz_value((flag_indx(end)+1):end);
 interval(i+1).spectra = sorted_mz_indx((flag_indx(end)+1):end);
 interval(i+1).intensity = TempSp(((flag_indx(i)+1):end));
-clearvars -except number_of_intervals interval ppm binOfLengthOneOK splitCorrection
+clearvars -except dims number_of_intervals interval ppm binOfLengthOneOK splitCorrection
 %% Do the alignment here in parallel for loop
 
 % intiate a parallel pool
@@ -100,7 +100,7 @@ clearvars -except number_of_intervals interval ppm binOfLengthOneOK splitCorrect
 tic;
 parfor i=1:(number_of_intervals+1)
     % align the intervals individualy
-    bin{i} = alignIntervalB1M1(interval(i),ppm, binOfLengthOneOK,splitCorrection) ;
+    bin{i} = alignIntervalB1M1(interval(i),ppm, dims, binOfLengthOneOK,splitCorrection, repeatPeak) ;
 end
 toc;
 % delete pool object

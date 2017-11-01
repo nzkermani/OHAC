@@ -1,4 +1,4 @@
-function [binNew]= convertToBinNew(dims, binStruct,sorted_mz_indx,sp,mz,method)
+function [binNew]= convertToBin(dims, binStruct,sorted_mz_indx,sorted_mz_value,TempSp,method)
 % map sorted values back to the image
 dbstop if error
 method = 'restrict';
@@ -19,19 +19,24 @@ binCounter = 1;
 for i =1 :length(binStruct)
         binTemp = binStruct{1,i};
         MZ_Loc = sorted_mz_indx(counter:(counter+length(binTemp)-1));
+        MZ = sorted_mz_value(counter:(counter+length(binTemp)-1));
+        int = TempSp(counter:(counter+length(binTemp)-1));
         counter = counter+length(binTemp);
         j=1;
         while( j <= length(binTemp))
             indx = find(binTemp == binTemp(j));
-            [temp1, temp2, temp3] = ind2sub(dims, MZ_Loc(indx));
             j = j+length(indx);
             binNew(binCounter).spectra = MZ_Loc(indx);
-             for k = 1:length(temp1)
-                binNew(binCounter).mz(k) = mz(temp1(k), temp2(k), temp3(k));
-                binNew(binCounter).intensity(k) = sp(temp1(k), temp2(k), temp3(k));
-            end    
+            binNew(binCounter).mz = MZ(indx);
+            binNew(binCounter).intensity = int(indx);
+%             for k = 1:length(temp1)
+%                 binNew(binCounter).mz(k) = mz(temp1(k), temp2(k), temp3(k));
+%                 binNew(binCounter).intensity(k) = sp(temp1(k), temp2(k), temp3(k));
+%             end    
      if(strcmp(method , 'restrict'))
          
+         
+        [temp1, temp2, temp3] = ind2sub(dims, MZ_Loc(indx));
         if(length(temp1)>1)
          [c,ia,ic]=unique([temp1'; temp2']','rows');
         if(max(ic)<length(temp1))
@@ -40,7 +45,7 @@ for i =1 :length(binStruct)
                 duplicatedIndex = find(ic==ia(k));
                 if(length(duplicatedIndex)>0)
                     [~, indMaxIntensity] = max(binNew(binCounter).intensity(duplicatedIndex));
-                    binNew(binCounter).mz(setdiff(duplicatedIndex, indMaxIntensity))= -1;
+                    binNew(binCounter).mz(setdiff(duplicatedIndex, duplicatedIndex(indMaxIntensity)))= -1;
                 end
             end
         end
@@ -60,3 +65,5 @@ end
 toc;
 close(h) 
 end
+
+
