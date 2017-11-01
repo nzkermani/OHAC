@@ -1,4 +1,4 @@
-function [bin] = alignIntervalB1M1(interval,ppm, binOfLengthOneOK,splitCorrection)
+function [bin] = alignIntervalB1M1(interval,ppm, dims, binOfLengthOneOK,splitCorrection, repeatPeak)
 % profiling variable
 p=0;
 % Eppm is the ppm error window
@@ -23,6 +23,7 @@ if (size(interval.ions,1)>1)
     BaSpectra = interval.spectra(indx_temp);
     BaIntensity = interval.intensity(indx_temp);
     number_of_ions_in_intervali = length(interval.ions);
+    
     if(p==1)
         display(number_of_ions_in_intervali)
     end
